@@ -1,38 +1,40 @@
+from typing import Iterator, Optional
+
 # create the superclass
 class BioSequence:
 
     # constructor sets  shared attributes
-    def __init__(self, id, seq):
+    def __init__(self, id: Optional[str], seq: str):
         self._id = id
         self._seq = seq.upper()
 
     # getters for shared attributes
     # getter for id
     @property
-    def id(self):
+    def id(self) -> Optional[str]:
         return self._id 
 
     # getter for seq
     @property
-    def seq(self):
+    def seq(self) -> str:
         return self._seq
     
     # special method shared by subclasses
     # prints the class attributes nicely
-    def __str__(self):
+    def __str__(self) -> str:
         return f'Sequence Object: ID; {self.id}, \
 Seq; {self.seq}'
     
     # returns the length of the sequence when len is called on an object
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.seq)
     
     # iterates over the sequence if a for loop is run on the class
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self.seq)
     
     # return a fasta string
-    def make_fasta(self):
+    def make_fasta(self) -> str:
         return f'>{self.id}\n{self.seq}\n'
     
 # create the subclass
@@ -43,14 +45,14 @@ class DNASequence(BioSequence):
 
     # these methods are only relevant for DNA sequences
     # gc content method
-    def calc_gc_content(self, dp=2):
+    def calc_gc_content(self, dp: int=2) -> float:
         c_count = self.seq.count('C')
         g_count = self.seq.count('G')
         gc_content = (c_count + g_count) / len(self.seq)
         return round(gc_content, dp)
     
     # translate method
-    def translate_seq(self):
+    def translate_seq(self) -> str:
         # make codon table
         bases = "tcag".upper()
         codons = [a + b + c for a in bases for b in bases for c in bases]
@@ -65,7 +67,7 @@ class DNASequence(BioSequence):
         
     # this is a polymorphic function to get the protein length
     # // is a floor division
-    def get_protein_len(self):
+    def get_protein_len(self) -> int:
         return len(self.seq) // 3
 
 
@@ -76,7 +78,7 @@ class ProteinSequence(BioSequence):
 
     # constructor override
     # descr is optional, default is an empty string
-    def __init__(self, id, seq, descr=''):
+    def __init__(self, id: str, seq: str, descr: str='') -> None:
         # call the constructor from the super class to set shared attributes
         super().__init__(id, seq)
         # aslo set the unique attribute
@@ -84,11 +86,11 @@ class ProteinSequence(BioSequence):
 
     # getter for descr attribute
     @property
-    def descr(self):
+    def descr(self) -> str:
         return self._descr
 
     # method specific for protein sequences
-    def get_prop_hydrophobic(self):
+    def get_prop_hydrophobic(self) -> float:
         count_hydrophobic = 0
         hydrophobic = ['A', 'I', 'L', 'M', 'F', 'W', 'Y', 'V']
         for hydro in hydrophobic:
@@ -97,5 +99,5 @@ class ProteinSequence(BioSequence):
         return count_hydrophobic / len(self.seq)
     
     # polymorphic method to get protein length
-    def get_protein_len(self):
+    def get_protein_len(self) -> int:
         return len(self.seq)

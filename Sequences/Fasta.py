@@ -4,12 +4,12 @@ import typing
 class FastaFile:
 
     # constructor - only attribute is string containing a file name
-    def __init__(self, file):
+    def __init__(self, file: str):
         self._file = file
 
     # getter for file name
     @property
-    def file(self):
+    def file(self) -> str:
         return self._file
 
     # method to get DNASequence records out from a fasta file
@@ -17,7 +17,7 @@ class FastaFile:
     # and return a DNASequence for every pair of lines
     # this function now takes the sequence class as a parameter
     @typing.no_type_check
-    def get_seq_record(self, sequence_class):
+    def get_seq_record(self, sequence_class) -> tuple:
         with open(self.file) as filehandle:
             for line in filehandle:
                 if line.startswith('>'):
