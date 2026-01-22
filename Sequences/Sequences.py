@@ -1,17 +1,21 @@
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Type
+from dataclasses import dataclass
+from functools import cached_property
+from abc import ABC, abstractmethod
+
 
 # create the superclass
 class BioSequence:
 
     # constructor sets  shared attributes
-    def __init__(self, id: Optional[str], seq: str):
+    def __init__(self, id: str, seq: str):
         self._id = id
         self._seq = seq.upper()
 
     # getters for shared attributes
     # getter for id
     @property
-    def id(self) -> Optional[str]:
+    def id(self) -> str:
         return self._id 
 
     # getter for seq
@@ -36,20 +40,56 @@ Seq; {self.seq}'
     # return a fasta string
     def make_fasta(self) -> str:
         return f'>{self.id}\n{self.seq}\n'
+
+
+@dataclass
+class NucleotideSequence(ABC):
+
+    id: str
+    raw_seq: str
+
+    @property
+    @abstractmethod
+    def nucleotides(self) -> str:
+        ...
+
+    def calc_gc_content(self) -> float:
+        c_count = self.nucleotides.count('C')
+        g_count = self.nucleotides.count('G')
+        return (c_count + g_count) / len(self.raw_seq)
     
+    def __len__(self) -> int:
+        return len(self.raw_seq)
+
+    @staticmethod
+    def normalise_string(raw: str, alphabet: str) -> str:
+        allowed_symbols = set(alphabet.upper())
+        norm = raw.upper()
+        for i, symbol in enumerate(norm):
+            if symbol not in allowed_symbols:
+                raise ValueError(f'Invalid symbol at position {i}: {symbol}')
+        return norm
+
+
 # create the subclass
 # inherits from BioSequence
-class DNASequence(BioSequence):
 
+@dataclass(frozen=True)
+class DNASequence(NucleotideSequence):
+
+    id: str
+    raw_seq: str
     # don't need to add any shared content here!
-
+    @cached_property
+    def nucleotides(self) -> str:
+        return NucleotideSequence.normalise_string(self.raw_seq, 'ACGTN')
     # these methods are only relevant for DNA sequences
     # gc content method
-    def calc_gc_content(self, dp: int=2) -> float:
-        c_count = self.seq.count('C')
-        g_count = self.seq.count('G')
-        gc_content = (c_count + g_count) / len(self.seq)
-        return round(gc_content, dp)
+    # def calc_gc_content(self, dp: int=2) -> float:
+    #     c_count = self.nucleotides.count('C')
+    #     g_count = self.nucleotides.count('G')
+    #     gc_content = (c_count + g_count) / len(self.seq)
+    #     return round(gc_content, dp)
     
     # translate method
     def translate_seq(self) -> str:
@@ -61,14 +101,30 @@ class DNASequence(BioSequence):
 
         # do translation
         # use a list comprehension and join to make a string
-        aa_list = [codon_table[self.seq[start:start+3]] for start in range(0, len(self.seq) -2, 3)]
+        aa_list = [codon_table[self.raw_seq[start:start+3]] for start in range(0, len(self.raw_seq) -2, 3)]
         protein = ''.join(aa_list)
         return protein
         
     # this is a polymorphic function to get the protein length
     # // is a floor division
     def get_protein_len(self) -> int:
-        return len(self.seq) // 3
+        return len(self.raw_seq) // 3
+
+@dataclass(frozen=True)
+class RNASequence(NucleotideSequence):
+
+    id: str
+    raw_seq: str
+
+    @cached_property
+    def nucleotides(self) -> str:
+        return NucleotideSequence.normalise_string(self.raw_seq, 'ACGUN')
+
+    # def calc_gc_content(self, dp: int=2) -> float:
+    #     c_count = self.nucleotides.count('C')
+    #     g_count = self.nucleotides.count('G')
+    #     gc_content = (c_count + g_count) / len(self.seq)
+    #     return round(gc_content, dp)
 
 
 
